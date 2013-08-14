@@ -1,3 +1,9 @@
+apt-transport-s3 (1.1.5) unstable; urgency=low
+
+  * Use provided user and password information, fallback to IAM.
+
+ -- Nikola Kotur <kotnick@gmail.com>  Wed, 14 Aug 2013 14:53:47 +0200
+
 apt-transport-s3 (1.1.4) unstable; urgency=low
 
   * Version bump.
