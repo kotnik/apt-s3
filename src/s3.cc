@@ -783,45 +783,40 @@ void HttpMethod::SendReq(FetchItem *Itm,CircleBuf &Out)
    string dateString((const char*)buffer);
    Req += "Date: " + dateString + "\r\n";
 
-   std::string roleAccessKey, roleSecretKey, roleToken;
-   string extractedPassword;
+   string extractedPassword, roleToken;
    string user;
-   bool hasRole = GetRoleData(roleAccessKey, roleSecretKey, roleToken);
-   if (hasRole) {
-     user = roleAccessKey;
-     extractedPassword = roleSecretKey;
-     Req +=  "x-amz-security-token: " + roleToken + "\r\n";
-     roleToken = "x-amz-security-token:" + roleToken;
+   bool usingIam = false;
+
+   if (Uri.Password.empty() && Uri.User.empty()) {
+      if (NULL == getenv("AWS_SECRET_ACCESS_KEY") && NULL == getenv("AWS_ACCESS_KEY_ID")) {
+         /* Use IAM for authentication. */
+         string roleAccessKey, roleSecretKey;
+         usingIam = GetRoleData(roleAccessKey, roleSecretKey, roleToken);
+         user = roleAccessKey;
+         extractedPassword = roleSecretKey;
+         Req +=  "x-amz-security-token: " + roleToken + "\r\n";
+         roleToken = "x-amz-security-token:" + roleToken;
+      } else {
+         user = getenv("AWS_ACCESS_KEY_ID");
+         extractedPassword = getenv("AWS_SECRET_ACCESS_KEY");
+      }
    } else {
-     if (Uri.Password.empty() && NULL == getenv("AWS_SECRET_ACCESS_KEY")) {
-       cerr << "E: No AWS_SECRET_ACCESS_KEY set" << endl;
-       exit(1);
-     } else if(Uri.Password.empty()) {
-       extractedPassword = getenv("AWS_SECRET_ACCESS_KEY");
-     } else {
-       if(Uri.Password.at(0) == '['){
+      user = Uri.User;
+      if (Uri.Password.at(0) == '[') {
          extractedPassword = Uri.Password.substr(1,Uri.Password.size()-2);
-       }else{
+      } else {
          extractedPassword = Uri.Password;
-       }
-     }
-     if (Uri.User.empty() && NULL == getenv("AWS_ACCESS_KEY_ID")) {
-       cerr << "E: No AWS_ACCESS_KEY_ID set" << endl;
-       exit(1);
-     } else if (Uri.User.empty()) {
-       user = getenv("AWS_ACCESS_KEY_ID");
-     } else {
-       user = Uri.User;
-     }
+      }
    }
 
    char headertext[SLEN], signature[SLEN];
-   if (hasRole) {
-     sprintf(headertext,"GET\n\n\n%s\n%s\n%s", dateString.c_str(), roleToken.c_str(), normalized_path.c_str());
+   if (usingIam) {
+      sprintf(headertext,"GET\n\n\n%s\n%s\n%s", dateString.c_str(), roleToken.c_str(), normalized_path.c_str());
    } else {
-     sprintf(headertext,"GET\n\n\n%s\n%s", dateString.c_str(), normalized_path.c_str());
+      sprintf(headertext,"GET\n\n\n%s\n%s", dateString.c_str(), normalized_path.c_str());
    }
    doEncrypt(headertext, signature, extractedPassword.c_str());
+
 
    string signatureString(signature);
    //cerr << "user " << user << "\n";
