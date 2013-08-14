@@ -817,10 +817,9 @@ void HttpMethod::SendReq(FetchItem *Itm,CircleBuf &Out)
    }
    doEncrypt(headertext, signature, extractedPassword.c_str());
 
-
    string signatureString(signature);
    //cerr << "user " << user << "\n";
-	 Req += "Authorization: AWS " + user + ":" + signatureString + "\r\n";
+	Req += "Authorization: AWS " + user + ":" + signatureString + "\r\n";
    Req += "User-Agent: Ubuntu APT-HTTP/1.3 ("VERSION")\r\n\r\n";
 
    if (Debug == true)
