@@ -71,5 +71,5 @@ bool GetRoleData(string &access_key, string &secret_key, string &token) {
     }
   }
   curl_global_cleanup();
-  return success; 
+  return success;
 }
