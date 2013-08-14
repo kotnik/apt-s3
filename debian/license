@@ -1,11 +1,11 @@
 This is the apt-transport-s3 package, maintained by
-Jorge A Gallegos <kad@blegh.net>
+Nikola Kotur <kotnick@gmail.com>
 
 The original source can always be found at:
     https://github.com/kyleshank/apt-s3
 
 The development place for apt-transport-s3 is at
-    https://github.com/thekad/apt-s3
+    https://github.com/kotnik/apt-s3
 
 apt-transport-s3 is based on the http method from Apt.
 
@@ -35,4 +35,4 @@ by the Free Software Foundation:
    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 On Debian systems, the complete text of the GNU General Public License can
-be found in `/usr/share/common-licenses/GPL'. 
+be found in `/usr/share/common-licenses/GPL'.

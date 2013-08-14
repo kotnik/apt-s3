@@ -1,3 +1,16 @@
+apt-transport-s3 (1.1.4) unstable; urgency=low
+
+  * Version bump.
+
+ -- Nikola Kotur <kotnick@gmail.com>  Wed, 14 Aug 2013 14:07:00 +0200
+
+apt-transport-s3 (1.1.1ubuntu5) precise; urgency=high
+
+  * Now supports IAM roles as the default authentication mechanism.
+  * Falls back to URL or environment variables if not found.
+
+ -- Jason Brownbridge <jason@businessoptics.co.za>  Sun, 03 Mar 2013 19:56:05 +0200
+
 apt-transport-s3 (1.1.1ubuntu2) precise; urgency=low
 
   * Modified for company needs
