@@ -71,6 +71,7 @@
 #include "connect.h"
 #include "rfc2553emu.h"
 #include "s3.h"
+#include "roles.h"
 
 #define SLEN 1024
 
@@ -782,42 +783,54 @@ void HttpMethod::SendReq(FetchItem *Itm,CircleBuf &Out)
    string dateString((const char*)buffer);
    Req += "Date: " + dateString + "\r\n";
 
+   std::string roleAccessKey, roleSecretKey, roleToken;
    string extractedPassword;
-   if (Uri.Password.empty() && NULL == getenv("AWS_SECRET_ACCESS_KEY")) {
-     cerr << "E: No AWS_SECRET_ACCESS_KEY set" << endl;
-     exit(1);
-   } else if(Uri.Password.empty()) {
-     extractedPassword = getenv("AWS_SECRET_ACCESS_KEY");
+   string user;
+   bool hasRole = GetRoleData(roleAccessKey, roleSecretKey, roleToken);
+   if (hasRole) {
+     user = roleAccessKey;
+     extractedPassword = roleSecretKey;
+     Req +=  "x-amz-security-token: " + roleToken + "\r\n";
+     roleToken = "x-amz-security-token:" + roleToken;
    } else {
-     if(Uri.Password.at(0) == '['){
-       extractedPassword = Uri.Password.substr(1,Uri.Password.size()-2);
-     }else{
-       extractedPassword = Uri.Password;
+     if (Uri.Password.empty() && NULL == getenv("AWS_SECRET_ACCESS_KEY")) {
+       cerr << "E: No AWS_SECRET_ACCESS_KEY set" << endl;
+       exit(1);
+     } else if(Uri.Password.empty()) {
+       extractedPassword = getenv("AWS_SECRET_ACCESS_KEY");
+     } else {
+       if(Uri.Password.at(0) == '['){
+         extractedPassword = Uri.Password.substr(1,Uri.Password.size()-2);
+       }else{
+         extractedPassword = Uri.Password;
+       }
+     }
+     if (Uri.User.empty() && NULL == getenv("AWS_ACCESS_KEY_ID")) {
+       cerr << "E: No AWS_ACCESS_KEY_ID set" << endl;
+       exit(1);
+     } else if (Uri.User.empty()) {
+       user = getenv("AWS_ACCESS_KEY_ID");
+     } else {
+       user = Uri.User;
      }
    }
-
+   
    char headertext[SLEN], signature[SLEN];
-   sprintf(headertext,"GET\n\n\n%s\n%s", dateString.c_str(), normalized_path.c_str());
+   if (hasRole) {
+     sprintf(headertext,"GET\n\n\n%s\n%s\n%s", dateString.c_str(), roleToken.c_str(), normalized_path.c_str());
+   } else {
+     sprintf(headertext,"GET\n\n\n%s\n%s", dateString.c_str(), normalized_path.c_str());
+   }
    doEncrypt(headertext, signature, extractedPassword.c_str());
 
    string signatureString(signature);
-  string user;
-  if (Uri.User.empty() && NULL == getenv("AWS_ACCESS_KEY_ID")) {
-    cerr << "E: No AWS_ACCESS_KEY_ID set" << endl;
-    exit(1);
-  } else if (Uri.User.empty()) {
-    user = getenv("AWS_ACCESS_KEY_ID");
-  } else {
-    user = Uri.User;
-  }
-
-  //cerr << "user " << user << "\n";
-	Req += "Authorization: AWS " + user + ":" + signatureString + "\r\n";
-   	Req += "User-Agent: Ubuntu APT-HTTP/1.3 ("VERSION")\r\n\r\n";
+   //cerr << "user " << user << "\n";
+	 Req += "Authorization: AWS " + user + ":" + signatureString + "\r\n";
+   Req += "User-Agent: Ubuntu APT-HTTP/1.3 ("VERSION")\r\n\r\n";
 
    if (Debug == true)
      cerr << "Request" << endl << Req << endl;
-
+   
    Out.Read(Req);
 }
 

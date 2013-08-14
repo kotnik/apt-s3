@@ -19,6 +19,7 @@
 #include <apt-pkg/acquire-method.h>
 
 #include "connect.h"
+#include "roles.h"
 #include "rfc2553emu.h"
 #include "s3.h"
 #include <iostream>
